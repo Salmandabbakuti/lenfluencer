@@ -1,5 +1,5 @@
 {
-  "name": "lensfluencer-sponsorships",
+  "name": "lenfluencer",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "antd": "^5.6.1",
     "eslint": "8.42.0",
     "eslint-config-next": "13.4.4",
     "next": "13.4.4",
