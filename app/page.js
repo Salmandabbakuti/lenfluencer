@@ -43,10 +43,9 @@ const cfav1ForwarderABI = [
 const CFAV1_FORWARDER_ADDRESS = "0xcfA132E353cB4E398080B9700609bb008eceB125"; // mumbai testnet
 const SUPER_TOKEN_ADDRESS = "0x5d8b4c2554aeb7e86f387b4d6c00ac33499ed01f"; // fdaix on mumbai testnet
 
-const PROFILES_QUERY = gql`
-  query profiles($request: ProfileQueryRequest!) {
-    profiles(request: $request) {
-      items {
+const PROFILE_QUERY = gql`
+  query profile($request: SingleProfileQueryRequest!) {
+    profile(request: $request) {
         id
         name
         handle
@@ -79,7 +78,6 @@ const PROFILES_QUERY = gql`
           totalFollowing
           totalPosts
         }
-      }
     }
   }
 `;
@@ -288,27 +286,24 @@ export default function Home() {
   const fetchProfile = async () => {
     setDataLoading(true);
     // update search filters based on type
+    const handle = searchQuery && searchQuery.endsWith(".lens")
+      ? searchQuery
+      : (searchQuery ? searchQuery + ".lens" : "stani.lens");
+
     client
-      .request(PROFILES_QUERY, {
+      .request(PROFILE_QUERY, {
         request: {
-          limit: 10,
-          handles: searchQuery
-            ? [
-              searchQuery.endsWith(".lens")
-                ? searchQuery
-                : searchQuery + ".lens"
-            ]
-            : ["stani.lens"]
+          handle
         }
       })
       .then((data) => {
-        console.log("profiles: ", data.profiles.items);
-        setProfile(data.profiles.items[0]);
+        console.log("profile: ", data.profile);
+        setProfile(data.profile);
         setDataLoading(false);
       })
       .catch((err) => {
         setDataLoading(false);
-        message.error("Something went wrong. Is the Subgraph running?");
+        message.error("Something went wrong!");
         console.error("failed to get profiles: ", err);
       });
   };
