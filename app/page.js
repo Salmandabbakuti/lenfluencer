@@ -15,7 +15,7 @@ import {
   message,
   Popconfirm,
   Table,
-  Switch,
+  Tabs,
   Checkbox
 } from "antd";
 import {
@@ -375,7 +375,7 @@ export default function Home() {
       )
     },
     {
-      title: "Flow Rate",
+      title: "Amount",
       key: "flowRate",
       sorter: (a, b) => a.flowRate.localeCompare(b.flowRate),
       width: "5%",
@@ -454,127 +454,152 @@ export default function Home() {
         onChange={(e) => setSearchQuery(e.target.value)}
       />
       {profile && (
-        <Row gutter={[16, 18]}>
-          <Col xs={24} sm={12} md={8} lg={6}>
-            <Card
-              cover={
-                <img src={profile?.coverPicture?.original?.url} alt="Cover" />
-              }
-            >
-              <Row gutter={16} align="middle">
-                <Col>
-                  <Avatar size={80} src={profile?.picture?.original?.url} />
-                </Col>
-                <Col flex="auto">
-                  <Meta title={profile?.name} description={profile?.handle} />
-                </Col>
-              </Row>
-              <Row style={{ marginTop: "16px" }}>
-                <Col span={24}>
+        <Card
+          cover={<img src={profile?.coverPicture?.original?.url} alt="Cover" />}
+        >
+          <Row gutter={16} align="middle">
+            <Col>
+              <Avatar size={80} src={profile?.picture?.original?.url} />
+            </Col>
+            <Col flex="auto">
+              <Meta title={profile?.name} description={profile?.handle} />
+            </Col>
+          </Row>
+          <Row style={{ marginTop: "16px" }}>
+            <Col span={24}>
+              <div>
+                <span>{profile?.bio}</span>
+              </div>
+            </Col>
+          </Row>
+          <Row gutter={16} style={{ marginTop: "16px" }}>
+            <Col span={8}>
+              <div>
+                <span>
+                  <b>{profile?.stats?.totalFollowers}</b> Followers
+                </span>
+              </div>
+            </Col>
+            <Col span={8}>
+              <div>
+                <span>
+                  <b>{profile?.stats?.totalFollowing}</b> Following
+                </span>
+              </div>
+            </Col>
+            <Col span={8}>
+              <div>
+                <span>
+                  <b>{profile?.stats?.totalPosts}</b> Posts
+                </span>
+              </div>
+            </Col>
+          </Row>
+          <Row style={{ marginTop: "16px" }}>
+            <Col span={24}>
+              <Popconfirm
+                title={`Sponsor ${profile?.handle}`}
+                description={
+                  <Space direction="vertical">
+                    <Input
+                      type="number"
+                      name="flowRate"
+                      addonAfter="fDAIx/month"
+                      placeholder="Flowrate in no. of tokens"
+                      value={flowRateInput}
+                      onChange={(e) => setFlowRateInput(e.target.value)}
+                      style={{
+                        borderRadius: 10,
+                        marginBottom: 10
+                        // width: 120
+                      }}
+                    />
+                    <p>
+                      *You are Streaming <b>{flowRateInput || 0} fDAIx/month</b>{" "}
+                      to {profile?.handle}
+                    </p>
+                  </Space>
+                }
+                onConfirm={
+                  account
+                    ? () =>
+                      handleCreateStream({
+                        token: SUPER_TOKEN_ADDRESS,
+                        sender: account,
+                        receiver: profile?.ownedBy,
+                        flowRate: flowRateInput
+                      })
+                    : handleConnectWallet
+                }
+                okText={account ? "Sponsor" : "Connect Wallet"}
+                cancelText="Cancel"
+                onCancel={() => { }}
+              >
+                <Button type="primary" style={{ backgroundColor: "#bf3989" }}>
+                  Sponsor
+                </Button>
+              </Popconfirm>
+            </Col>
+          </Row>
+          <Tabs
+            // onChange={ }
+            type="line"
+            animated
+            defaultActiveKey="posts"
+            style={{ marginBottom: 20 }}
+            items={[
+              {
+                key: "posts",
+                label: "Posts", children: <h2>Posts</h2>
+              },
+              {
+                key: "sponsorships",
+                label: "Sponsorships",
+                children: (
                   <div>
-                    <span>{profile?.bio}</span>
-                  </div>
-                </Col>
-              </Row>
-              <Row gutter={16} style={{ marginTop: "16px" }}>
-                <Col span={8}>
-                  <div>
-                    <span>
-                      <b>{profile?.stats?.totalFollowers}</b> Followers
-                    </span>
-                  </div>
-                </Col>
-                <Col span={8}>
-                  <div>
-                    <span>
-                      <b>{profile?.stats?.totalFollowing}</b> Following
-                    </span>
-                  </div>
-                </Col>
-                <Col span={8}>
-                  <div>
-                    <span>
-                      <b>{profile?.stats?.totalPosts}</b> Posts
-                    </span>
-                  </div>
-                </Col>
-              </Row>
-              <Row style={{ marginTop: "16px" }}>
-                <Col span={24}>
-                  <Popconfirm
-                    title={`Sponsor ${profile?.handle}`}
-                    description={
-                      <Space direction="vertical">
-                        <Input
-                          type="number"
-                          name="flowRate"
-                          addonAfter="fDAIx/month"
-                          placeholder="Flowrate in no. of tokens"
-                          value={flowRateInput}
-                          onChange={(e) => setFlowRateInput(e.target.value)}
-                          style={{
-                            borderRadius: 10,
-                            marginBottom: 10
-                            // width: 120
+                    <Row justify="end">
+                      <Checkbox
+                        defaultChecked={true}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            getStreams(profile?.ownedBy);
+                          } else {
+                            getStreams(
+                              profile?.ownedBy,
+                              account?.toLowerCase()
+                            );
+                          }
+                        }}
+                      >
+                        Show All
+                      </Checkbox>
+                    </Row>
+                    <Row>
+                      <h3>Sponsorships</h3>
+                      <Col span={24}>
+                        <Table
+                          className="table_grid"
+                          columns={sponsorshipColumns}
+                          rowKey="id"
+                          dataSource={streams}
+                          loading={dataLoading}
+                          pagination={{
+                            pageSizeOptions: [5, 10, 20, 25, 50, 100],
+                            showSizeChanger: true,
+                            showQuickJumper: true,
+                            defaultCurrent: 1,
+                            defaultPageSize: 10,
+                            size: "small"
                           }}
                         />
-                        <p>
-                          *You are Streaming{" "}
-                          <b>{flowRateInput || 0} fDAIx/month</b> to{" "}
-                          {profile?.handle}
-                        </p>
-                      </Space>
-                    }
-                    onConfirm={
-                      account
-                        ? () =>
-                          handleCreateStream({
-                            token: SUPER_TOKEN_ADDRESS,
-                            sender: account,
-                            receiver: profile?.ownedBy,
-                            flowRate: flowRateInput
-                          })
-                        : handleConnectWallet
-                    }
-                    okText={account ? "Sponsor" : "Connect Wallet"}
-                    cancelText="Cancel"
-                    onCancel={() => { }}
-                  >
-                    <Button
-                      type="primary"
-                      style={{ backgroundColor: "#bf3989" }}
-                    >
-                      Sponsor
-                    </Button>
-                  </Popconfirm>
-                </Col>
-              </Row>
-              <Row justify="end">
-                <Checkbox
-                  onChange={(e) => {
-                    if (e.target.checked) {
-                      getStreams(profile?.ownedBy);
-                    } else {
-                      getStreams(profile?.ownedBy, account?.toLowerCase());
-                    }
-                  }}
-                >
-                  Show All
-                </Checkbox>
-              </Row>
-              <Row>
-                <h3>Sponsorships</h3>
-                <Col span={24}>
-                  <Table
-                    columns={sponsorshipColumns}
-                    dataSource={streams}
-                    pagination={false}
-                  />
-                </Col>
-              </Row>
-            </Card>
-          </Col>
-        </Row>
+                      </Col>
+                    </Row>
+                  </div>
+                )
+              }
+            ]}
+          />
+        </Card>
       )}
     </div>
   );
