@@ -18,14 +18,15 @@ import {
   Tabs,
   Checkbox
 } from "antd";
-import {
-  SyncOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  CopyOutlined
-} from "@ant-design/icons";
+import { SyncOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
 import styles from "./page.module.css";
-// import "antd/dist/antd.css";
+import "antd/dist/reset.css";
+import {
+  COVER,
+  imageKit,
+  sanitizeDStorageUrl,
+  getAvatar
+} from "./utils";
 
 const { Meta } = Card;
 
@@ -46,44 +47,44 @@ const SUPER_TOKEN_ADDRESS = "0x5d8b4c2554aeb7e86f387b4d6c00ac33499ed01f"; // fda
 const PROFILE_QUERY = gql`
   query profile($request: SingleProfileQueryRequest!) {
     profile(request: $request) {
-        id
-        name
-        handle
-        bio
-        followNftAddress
-        metadata
-        ownedBy
-        coverPicture {
-          ... on NftImage {
-            uri
-          }
-          ... on MediaSet {
-            original {
-              url
-            }
+      id
+      name
+      handle
+      bio
+      followNftAddress
+      metadata
+      ownedBy
+      coverPicture {
+        ... on NftImage {
+          uri
+        }
+        ... on MediaSet {
+          original {
+            url
           }
         }
-        picture {
-          ... on NftImage {
-            uri
-          }
-          ... on MediaSet {
-            original {
-              url
-            }
+      }
+      picture {
+        ... on NftImage {
+          uri
+        }
+        ... on MediaSet {
+          original {
+            url
           }
         }
-        stats {
-          totalFollowers
-          totalFollowing
-          totalPosts
-        }
+      }
+      stats {
+        totalFollowers
+        totalFollowing
+        totalPosts
+      }
     }
   }
 `;
 
 const STREAMS_QUERY = gql`
-  query getStreams(
+  query getSponsorships(
     $skip: Int
     $first: Int
     $orderBy: Stream_orderBy
@@ -131,7 +132,7 @@ const calculateFlowRateInWeiPerSecond = (amount) => {
 };
 
 export default function Home() {
-  const [profile, setProfile] = useState({});
+  const [profile, setProfile] = useState(null);
   const [dataLoading, setDataLoading] = useState(false);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -206,11 +207,13 @@ export default function Home() {
       setCfav1Forwarder(cfav1Forwarder);
     } else {
       console.warn("Please use web3 enabled browser");
-      message.warn("Please install Metamask or any other web3 enabled browser");
+      message.warning(
+        "Please install Metamask or any other web3 enabled browser"
+      );
     }
   };
 
-  const handleCreateStream = async ({
+  const handleCreateSponsorship = async ({
     token,
     sender = account,
     receiver,
@@ -230,16 +233,16 @@ export default function Home() {
         "0x"
       );
       await tx.wait();
-      message.success("Stream created successfully");
+      message.success("Sponsorship created successfully");
       setLoading(false);
     } catch (err) {
       setLoading(false);
-      message.error("Failed to create stream");
-      console.error("failed to create stream: ", err);
+      message.error("Failed to create sponsorship");
+      console.error("Failed to create sponsorship: ", err);
     }
   };
 
-  const handleUpdateStream = async ({
+  const handleUpdateSponsorship = async ({
     token,
     sender = account,
     receiver,
@@ -259,36 +262,39 @@ export default function Home() {
         "0x"
       );
       await tx.wait();
-      message.success("Stream updated successfully");
+      message.success("Sponsorship updated successfully");
       setLoading(false);
     } catch (err) {
       setLoading(false);
-      message.error("Failed to update stream");
-      console.error("failed to update stream: ", err);
+      message.error("Failed to update sponsorship");
+      console.error("Failed to update sponsorship: ", err);
     }
   };
 
-  const handleDeleteStream = async ({ token, sender, receiver }) => {
+  const handleDeleteSponsorship = async ({ token, sender, receiver }) => {
     console.log("delete inputs: ", { token, sender, receiver });
     try {
       setLoading(true);
       const tx = await cfav1Forwarder.deleteFlow(token, sender, receiver, "0x");
       await tx.wait();
-      message.success("Stream deleted successfully");
+      message.success("Sponsorship deleted successfully");
       setLoading(false);
     } catch (err) {
       setLoading(false);
-      message.error("Failed to delete stream");
-      console.error("failed to delete stream: ", err);
+      message.error("Failed to delete sponsorship");
+      console.error("Failed to delete sponsorship: ", err);
     }
   };
 
   const fetchProfile = async () => {
     setDataLoading(true);
     // update search filters based on type
-    const handle = searchQuery && searchQuery.endsWith(".lens")
-      ? searchQuery
-      : (searchQuery ? searchQuery + ".lens" : "stani.lens");
+    const handle =
+      searchQuery && searchQuery.endsWith(".lens")
+        ? searchQuery
+        : searchQuery
+          ? searchQuery + ".lens"
+          : "stani.lens";
 
     client
       .request(PROFILE_QUERY, {
@@ -304,7 +310,7 @@ export default function Home() {
       .catch((err) => {
         setDataLoading(false);
         message.error("Something went wrong!");
-        console.error("failed to get profiles: ", err);
+        console.error("failed to get profile: ", err);
       });
   };
 
@@ -312,23 +318,14 @@ export default function Home() {
     if (profile) {
       const { ownedBy } = profile;
       console.log("flowsOwned: ", ownedBy);
-      getStreams(ownedBy);
+      getSponsorships(ownedBy);
+    } else {
+      fetchProfile();
     }
   }, [profile]);
 
-  const getStreams = (receiver, sender) => {
-    setLoading(true);
-    // update search filters based on type
-    // const { type, token, searchInput } = searchFilter;
-    // const filterObj = {};
-    // if (token) filterObj.token = token;
-    // if (type === "INCOMING") {
-    //   filterObj.receiver = account;
-    // } else if (type === "OUTGOING") {
-    //   filterObj.sender = account;
-    // } else if (type === "TERMINATED") {
-    //   filterObj.currentFlowRate = "0";
-    // }
+  const getSponsorships = (receiver, sender) => {
+    setDataLoading(true);
     subgraphClient
       .request(STREAMS_QUERY, {
         ...paginationOptions,
@@ -344,12 +341,12 @@ export default function Home() {
       .then((data) => {
         console.log("streams: ", data.streams);
         setStreams(data.streams);
-        setLoading(false);
+        setDataLoading(false);
       })
       .catch((err) => {
-        setLoading(false);
+        setDataLoading(false);
         message.error("Something went wrong!");
-        console.error("failed to get streams: ", err);
+        console.error("failed to get sponsorships: ", err);
       });
   };
 
@@ -391,7 +388,9 @@ export default function Home() {
           {row?.sender?.id === account?.toLowerCase() && (
             <Space size="small">
               <Popconfirm
-                title={
+                title="Update sponsorship flow rate?"
+                // add descrition as input number to update flow rate
+                description={
                   <Input
                     type="number"
                     placeholder="Flowrate in no. of tokens"
@@ -400,10 +399,8 @@ export default function Home() {
                     onChange={(e) => setUpdatedFlowRate(e.target.value)}
                   />
                 }
-                // add descrition as input number to update flow rate
-                description="Enter new flow rate"
                 onConfirm={() =>
-                  handleUpdateStream({
+                  handleUpdateSponsorship({
                     token: row?.token?.id,
                     sender: account,
                     receiver: row?.receiver?.id,
@@ -416,9 +413,9 @@ export default function Home() {
                 </Button>
               </Popconfirm>
               <Popconfirm
-                title="Are you sure to delete?"
+                title="Are you sure to withdraw sponsorship?"
                 onConfirm={() =>
-                  handleDeleteStream({
+                  handleDeleteSponsorship({
                     token: row?.token?.id,
                     sender: account,
                     receiver: row?.receiver?.id
@@ -438,23 +435,46 @@ export default function Home() {
 
   return (
     <div className={styles.container}>
-      <h1>Lenfluencer</h1>
-      <Input.Search
-        placeholder="Search by handle"
-        size="large"
-        value={searchQuery}
-        enterButton
-        allowClear
-        onSearch={fetchProfile}
-        onChange={(e) => setSearchQuery(e.target.value)}
-      />
+      <nav className={styles.stickyNavbar}>
+        <Space>
+          <div className={styles.logo}>
+            <Avatar
+              shape="circle"
+              size="default"
+              src="https://storage.googleapis.com/subgraph-images/1644913534625lens.png" alt="Company Logo" />
+          </div>
+          <h1>Lenfluencer</h1>
+          <Input.Search
+            placeholder="Search by handle"
+            size="large"
+            value={searchQuery}
+            enterButton
+            allowClear
+            onSearch={fetchProfile}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </Space>
+      </nav>
       {profile && (
         <Card
-          cover={<img src={profile?.coverPicture?.original?.url} alt="Cover" />}
+          style={{ marginTop: "16px" }}
+          cover={
+            <img
+              src={
+                profile?.coverPicture?.original?.url
+                  ? imageKit(
+                    sanitizeDStorageUrl(profile?.coverPicture?.original?.url),
+                    COVER
+                  )
+                  : "https://gateway.ipfscdn.io/ipfs/bafybeidot77xlzrrj2z2gcldxfsdyt5h5nounr5ue4tbsdtoojlyxbipsm"
+              }
+              alt="Cover"
+            />
+          }
         >
           <Row gutter={16} align="middle">
             <Col>
-              <Avatar size={80} src={profile?.picture?.original?.url} />
+              <Avatar size={80} src={getAvatar(profile)} />
             </Col>
             <Col flex="auto">
               <Meta title={profile?.name} description={profile?.handle} />
@@ -518,7 +538,7 @@ export default function Home() {
                 onConfirm={
                   account
                     ? () =>
-                      handleCreateStream({
+                      handleCreateSponsorship({
                         token: SUPER_TOKEN_ADDRESS,
                         sender: account,
                         receiver: profile?.ownedBy,
@@ -545,7 +565,8 @@ export default function Home() {
             items={[
               {
                 key: "posts",
-                label: "Posts", children: <h2>Posts</h2>
+                label: "Posts",
+                children: <h2>Posts</h2>
               },
               {
                 key: "sponsorships",
@@ -557,9 +578,9 @@ export default function Home() {
                         defaultChecked={true}
                         onChange={(e) => {
                           if (e.target.checked) {
-                            getStreams(profile?.ownedBy);
+                            getSponsorships(profile?.ownedBy);
                           } else {
-                            getStreams(
+                            getSponsorships(
                               profile?.ownedBy,
                               account?.toLowerCase()
                             );
@@ -571,6 +592,12 @@ export default function Home() {
                     </Row>
                     <Row>
                       <h3>Sponsorships</h3>
+                      <Button
+                        type="primary"
+                        onClick={() => getSponsorships(profile?.ownedBy)}
+                      >
+                        <SyncOutlined />
+                      </Button>
                       <Col span={24}>
                         <Table
                           className="table_grid"
