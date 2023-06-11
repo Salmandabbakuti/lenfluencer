@@ -511,6 +511,10 @@ export default function Home() {
           <Row style={{ marginTop: "16px" }}>
             <Col span={24}>
               <Popconfirm
+                placement="rightBottom"
+                arrow={{
+                  pointAtCenter: true
+                }}
                 title={`Sponsor ${profile?.handle}`}
                 description={
                   <Space direction="vertical">
