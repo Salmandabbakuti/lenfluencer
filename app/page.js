@@ -19,7 +19,12 @@ import {
   Checkbox,
   Empty
 } from "antd";
-import { SyncOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
+import {
+  SyncOutlined,
+  EditOutlined,
+  DeleteOutlined,
+  HeartOutlined
+} from "@ant-design/icons";
 import styles from "./page.module.css";
 import "antd/dist/reset.css";
 import { COVER, imageKit, sanitizeDStorageUrl, getAvatar } from "./utils";
@@ -535,6 +540,14 @@ export default function Home() {
                       *You are Streaming <b>{flowRateInput || 0} fDAIx/month</b>{" "}
                       to {profile?.handle}
                     </p>
+                    <span style={{ marginLeft: "8px" }}>
+                      Powered by{" "}
+                      <img
+                        alt="logo.svg"
+                        src="./superfluid_logo.svg"
+                        style={{ width: "30%", height: "30%" }}
+                      />
+                    </span>
                   </Space>
                 }
                 onConfirm={
@@ -552,7 +565,11 @@ export default function Home() {
                 cancelText="Cancel"
                 onCancel={() => { }}
               >
-                <Button type="primary" style={{ backgroundColor: "#bf3989" }}>
+                <Button
+                  icon={<HeartOutlined />}
+                  type="primary"
+                  style={{ backgroundColor: "#bf3989" }}
+                >
                   Sponsor
                 </Button>
               </Popconfirm>
