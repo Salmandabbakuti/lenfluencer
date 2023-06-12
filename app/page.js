@@ -16,17 +16,18 @@ import {
   Popconfirm,
   Table,
   Tabs,
-  Checkbox
+  Checkbox,
+  Empty
 } from "antd";
-import { SyncOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
+import {
+  SyncOutlined,
+  EditOutlined,
+  DeleteOutlined,
+  HeartOutlined
+} from "@ant-design/icons";
 import styles from "./page.module.css";
 import "antd/dist/reset.css";
-import {
-  COVER,
-  imageKit,
-  sanitizeDStorageUrl,
-  getAvatar
-} from "./utils";
+import { COVER, imageKit, sanitizeDStorageUrl, getAvatar } from "./utils";
 
 const { Meta } = Card;
 
@@ -139,7 +140,7 @@ export default function Home() {
   const [streamInput, setStreamInput] = useState({});
   const [account, setAccount] = useState(null);
   const [cfav1Forwarder, setCfav1Forwarder] = useState(null);
-  const [flowRateInput, setFlowRateInput] = useState(0);
+  const [flowRateInput, setFlowRateInput] = useState(null);
   const [streams, setStreams] = useState([]);
   const [paginationOptions, setPaginationOptions] = useState({
     first: 100,
@@ -358,7 +359,7 @@ export default function Home() {
       width: "10%",
       render: ({ sender }) => (
         <a
-          href={`https://goerli.etherscan.io/address/${sender?.id}`}
+          href={`https://mumbai.polygonscan.com/address/${sender?.id}`}
           target="_blank"
           rel="noreferrer"
         >
@@ -394,7 +395,7 @@ export default function Home() {
                   <Input
                     type="number"
                     placeholder="Flowrate in no. of tokens"
-                    addonAfter="/month"
+                    addonAfter="fDAIx/month"
                     value={updatedFlowRate}
                     onChange={(e) => setUpdatedFlowRate(e.target.value)}
                   />
@@ -441,7 +442,9 @@ export default function Home() {
             <Avatar
               shape="circle"
               size="default"
-              src="https://storage.googleapis.com/subgraph-images/1644913534625lens.png" alt="Company Logo" />
+              src="https://storage.googleapis.com/subgraph-images/1644913534625lens.png"
+              alt="Company Logo"
+            />
           </div>
           <h1>Lenfluencer</h1>
           <Input.Search
@@ -455,7 +458,7 @@ export default function Home() {
           />
         </Space>
       </nav>
-      {profile && (
+      {profile ? (
         <Card
           style={{ marginTop: "16px" }}
           cover={
@@ -513,6 +516,10 @@ export default function Home() {
           <Row style={{ marginTop: "16px" }}>
             <Col span={24}>
               <Popconfirm
+                placement="rightBottom"
+                arrow={{
+                  pointAtCenter: true
+                }}
                 title={`Sponsor ${profile?.handle}`}
                 description={
                   <Space direction="vertical">
@@ -533,6 +540,14 @@ export default function Home() {
                       *You are Streaming <b>{flowRateInput || 0} fDAIx/month</b>{" "}
                       to {profile?.handle}
                     </p>
+                    <span style={{ marginLeft: "8px" }}>
+                      Powered by{" "}
+                      <img
+                        alt="logo.svg"
+                        src="./superfluid_logo.svg"
+                        style={{ width: "30%", height: "30%" }}
+                      />
+                    </span>
                   </Space>
                 }
                 onConfirm={
@@ -550,7 +565,11 @@ export default function Home() {
                 cancelText="Cancel"
                 onCancel={() => { }}
               >
-                <Button type="primary" style={{ backgroundColor: "#bf3989" }}>
+                <Button
+                  icon={<HeartOutlined />}
+                  type="primary"
+                  style={{ backgroundColor: "#bf3989" }}
+                >
                   Sponsor
                 </Button>
               </Popconfirm>
@@ -622,6 +641,8 @@ export default function Home() {
             ]}
           />
         </Card>
+      ) : (
+        <Empty description="No Profile found.." />
       )}
     </div>
   );
