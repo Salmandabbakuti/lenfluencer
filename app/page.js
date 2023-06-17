@@ -146,72 +146,69 @@ export default function Home() {
     first: 100,
     skip: 0
   });
+  const [sponsorModalOpen, setSponsorModalOpen] = useState(false);
   const [showAllSponsorships, setShowAllSponsorships] = useState(true);
   const [updatedFlowRate, setUpdatedFlowRate] = useState(null);
 
   const handleConnectWallet = async () => {
-    if (window?.ethereum) {
-      const accounts = await window.ethereum.request({
-        method: "eth_requestAccounts"
-      });
-      console.log("Using account: ", accounts[0]);
-      const provider = new Web3Provider(window.ethereum);
-      const { chainId } = await provider.getNetwork();
-      if (chainId !== 80001) {
-        message.info("Switching to mumbai testnet");
-        // switch to the mumbai testnet
-        await window.ethereum
-          .request({
-            method: "wallet_switchEthereumChain",
-            params: [{ chainId: "0x13881" }]
-          })
-          .catch(async (err) => {
-            // This error code indicates that the chain has not been added to MetaMask.
-            console.log("err on switch", err);
-            if (err.code === 4902) {
-              message.info("Adding mumbai testnet to metamask");
-              await window.ethereum
-                .request({
-                  method: "wallet_addEthereumChain",
-                  params: [
-                    {
-                      chainId: "0x13881",
-                      chainName: "Polygon Mumbai Testnet",
-                      nativeCurrency: {
-                        name: "MATIC",
-                        symbol: "MATIC",
-                        decimals: 18
-                      },
-                      rpcUrls: [
-                        "https://matic-mumbai.chainstacklabs.com",
-                        "https://rpc-mumbai.maticvigil.com"
-                      ],
-                      blockExplorerUrls: ["https://mumbai.polygonscan.com"]
-                    }
-                  ]
-                })
-                .then(() => message.info("Switched to mumbai testnet"))
-                .catch((err) => {
-                  message.error("Error adding mumbai testnet to metamask");
-                  console.error(err);
-                });
-            }
-          });
-      }
-      console.log("chainId:", chainId);
-      setAccount(accounts[0].toLowerCase());
-      const cfav1Forwarder = new Contract(
-        CFAV1_FORWARDER_ADDRESS,
-        cfav1ForwarderABI,
-        provider.getSigner()
-      );
-      setCfav1Forwarder(cfav1Forwarder);
-    } else {
-      console.warn("Please use web3 enabled browser");
-      message.warning(
-        "Please install Metamask or any other web3 enabled browser"
-      );
+    if (!window?.ethereum) return message.warning(
+      "Please install Metamask or any other web3 enabled browser"
+    );
+    const accounts = await window.ethereum.request({
+      method: "eth_requestAccounts"
+    });
+    console.log("Using account: ", accounts[0]);
+    const provider = new Web3Provider(window.ethereum);
+    const { chainId } = await provider.getNetwork();
+    if (chainId !== 80001) {
+      message.info("Switching to mumbai testnet");
+      // switch to the mumbai testnet
+      await window.ethereum
+        .request({
+          method: "wallet_switchEthereumChain",
+          params: [{ chainId: "0x13881" }]
+        })
+        .catch(async (err) => {
+          // This error code indicates that the chain has not been added to MetaMask.
+          console.log("err on switch", err);
+          if (err.code === 4902) {
+            message.info("Adding mumbai testnet to metamask");
+            await window.ethereum
+              .request({
+                method: "wallet_addEthereumChain",
+                params: [
+                  {
+                    chainId: "0x13881",
+                    chainName: "Polygon Mumbai Testnet",
+                    nativeCurrency: {
+                      name: "MATIC",
+                      symbol: "MATIC",
+                      decimals: 18
+                    },
+                    rpcUrls: [
+                      "https://matic-mumbai.chainstacklabs.com",
+                      "https://rpc-mumbai.maticvigil.com"
+                    ],
+                    blockExplorerUrls: ["https://mumbai.polygonscan.com"]
+                  }
+                ]
+              })
+              .then(() => message.info("Switched to mumbai testnet"))
+              .catch((err) => {
+                message.error("Error adding mumbai testnet to metamask");
+                console.error(err);
+              });
+          }
+        });
     }
+    console.log("chainId:", chainId);
+    setAccount(accounts[0].toLowerCase());
+    const cfav1Forwarder = new Contract(
+      CFAV1_FORWARDER_ADDRESS,
+      cfav1ForwarderABI,
+      provider.getSigner()
+    );
+    setCfav1Forwarder(cfav1Forwarder);
   };
 
   const handleCreateSponsorship = async ({
@@ -516,6 +513,7 @@ export default function Home() {
           <Row style={{ marginTop: "16px" }}>
             <Col span={24}>
               <Popconfirm
+                open={sponsorModalOpen}
                 placement="rightBottom"
                 arrow={{
                   pointAtCenter: true
@@ -563,12 +561,13 @@ export default function Home() {
                 }
                 okText={account ? "Sponsor" : "Connect Wallet"}
                 cancelText="Cancel"
-                onCancel={() => { }}
+                onCancel={() => setSponsorModalOpen(false)}
               >
                 <Button
                   icon={<HeartOutlined />}
                   type="primary"
                   style={{ backgroundColor: "#bf3989" }}
+                  onClick={() => setSponsorModalOpen(true)}
                 >
                   Sponsor
                 </Button>
