@@ -12,9 +12,9 @@ Lenfluencer allows you to search for your favorite lens profiles and sponsor the
 
 **Update and withdraw sponsorships:** Lenfluencer allows you to update or delete your sponsorships. You have full control over the lens profiles you choose to support and can make changes as needed.
 
-![lenfluencer-sponsor-modal](https://github.com/Salmandabbakuti/lenfluencer/assets/29351207/f6b83ea4-a86a-46ce-9bd4-18b3a56ad7f7)
+![lenfluencer-sponsor-modal](https://github.com/Salmandabbakuti/lenfluencer/assets/29351207/180a9073-874f-43d3-a6d5-476b7a19f4ad)
 
-![lenfluencer-sponsors-list-profile](https://github.com/Salmandabbakuti/lenfluencer/assets/29351207/640daf1f-e3ed-4837-bdf8-e8b7138feb22)
+![lenfluencer-sponsors-list-profile](https://github.com/Salmandabbakuti/lenfluencer/assets/29351207/731828a0-6c3f-4a4a-842c-dbe5beebd71c)
 
 ## Getting Started
 
